@@ -126,7 +126,7 @@ class Chart(xmlwriter.XMLwriter):
             return
 
         if self.requires_category and "categories" not in options:
-            warn("Must specify 'categories' in add_series() " "for this chart type")
+            warn("Must specify 'categories' in add_series() for this chart type")
             return
 
         if len(self.series) == 255:
@@ -858,7 +858,7 @@ class Chart(xmlwriter.XMLwriter):
                 cell = xl_rowcol_to_cell(name[1], name[2], True, True)
                 name_formula = quote_sheetname(name[0]) + "!" + cell
                 name = ""
-            elif re.match(r"^=?[^!]+!\$?[A-Z]+\$?[0-9]+", name):
+            elif re.match(r"^=?[^!]+!\$?[A-Z]+\$?\d+", name):
                 # Name looks like a formula, use it to set name_formula.
                 name_formula = name
                 name = ""
@@ -1199,7 +1199,7 @@ class Chart(xmlwriter.XMLwriter):
                     continue
 
                 value = label.get("value")
-                if value and re.match(r"^=?[^!]+!\$?[A-Z]+\$?[0-9]+", str(value)):
+                if value and re.match(r"^=?[^!]+!\$?[A-Z]+\$?\d+", str(value)):
                     label["formula"] = value
 
                 formula = label.get("formula")
@@ -3047,7 +3047,7 @@ class Chart(xmlwriter.XMLwriter):
         self._xml_start_tag("a:p")
 
         # Write the a:pPr element.
-        self._write_a_p_pr_formula(font)
+        self._write_a_p_pr_rich(font)
 
         # Write the a:endParaRPr element.
         self._write_a_end_para_rpr()
@@ -3056,16 +3056,6 @@ class Chart(xmlwriter.XMLwriter):
 
     def _write_a_p_pr_rich(self, font):
         # Write the <a:pPr> element for rich string titles.
-
-        self._xml_start_tag("a:pPr")
-
-        # Write the a:defRPr element.
-        self._write_a_def_rpr(font)
-
-        self._xml_end_tag("a:pPr")
-
-    def _write_a_p_pr_formula(self, font):
-        # Write the <a:pPr> element for formula titles.
 
         self._xml_start_tag("a:pPr")
 
@@ -4186,7 +4176,6 @@ class Chart(xmlwriter.XMLwriter):
             self._xml_start_tag("a:gs", attributes)
 
             # Write the a:srgbClr element.
-            # TODO: Wait for a feature request to support transparency.
             color = get_rgb_color(colors[i])
             self._write_a_srgb_clr(color)
 

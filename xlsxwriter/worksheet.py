@@ -50,18 +50,35 @@ re_control_chars_2 = re.compile(r"([\x00-\x08\x0b-\x1f])")
 
 re_dynamic_function = re.compile(
     r"""
-    \bSORT\(       |
-    \bLET\(        |
-    \bLAMBDA\(     |
-    \bSINGLE\(     |
-    \bSORTBY\(     |
-    \bUNIQUE\(     |
-    \bXMATCH\(     |
-    \bFILTER\(     |
-    \bXLOOKUP\(    |
-    \bSEQUENCE\(   |
-    \bRANDARRAY\(  |
-    \bANCHORARRAY\(""",
+    \bANCHORARRAY\(    |
+    \bBYCOL\(          |
+    \bBYROW\(          |
+    \bCHOOSECOLS\(     |
+    \bCHOOSEROWS\(     |
+    \bDROP\(           |
+    \bEXPAND\(         |
+    \bFILTER\(         |
+    \bHSTACK\(         |
+    \bLAMBDA\(         |
+    \bMAKEARRAY\(      |
+    \bMAP\(            |
+    \bRANDARRAY\(      |
+    \bREDUCE\(         |
+    \bSCAN\(           |
+    \bSEQUENCE\(       |
+    \bSINGLE\(         |
+    \bSORT\(           |
+    \bSORTBY\(         |
+    \bSWITCH\(         |
+    \bTAKE\(           |
+    \bTEXTSPLIT\(      |
+    \bTOCOL\(          |
+    \bTOROW\(          |
+    \bUNIQUE\(         |
+    \bVSTACK\(         |
+    \bWRAPCOLS\(       |
+    \bWRAPROWS\(       |
+    \bXLOOKUP\(""",
     re.VERBOSE,
 )
 
@@ -416,13 +433,16 @@ class Worksheet(xmlwriter.XMLwriter):
         if token.startswith("{=") and token.endswith("}"):
             return self._write_formula(row, col, *args)
 
-        if ":" in token:
-            if self.strings_to_urls and re.match("(ftp|http)s?://", token):
-                return self._write_url(row, col, *args)
-            elif self.strings_to_urls and re.match("mailto:", token):
-                return self._write_url(row, col, *args)
-            elif self.strings_to_urls and re.match("(in|ex)ternal:", token):
-                return self._write_url(row, col, *args)
+        if (
+            ":" in token
+            and self.strings_to_urls
+            and (
+                re.match("(ftp|http)s?://", token)
+                or re.match("mailto:", token)
+                or re.match("(in|ex)ternal:", token)
+            )
+        ):
+            return self._write_url(row, col, *args)
 
         if self.strings_to_numbers:
             try:
@@ -830,146 +850,169 @@ class Worksheet(xmlwriter.XMLwriter):
             return formula
 
         # Expand dynamic formulas.
-        formula = re.sub(r"\bLET\(", "_xlfn.LET(", formula)
-        formula = re.sub(r"\bLAMBDA\(", "_xlfn.LAMBDA(", formula)
-        formula = re.sub(r"\bSINGLE\(", "_xlfn.SINGLE(", formula)
-        formula = re.sub(r"\bSORTBY\(", "_xlfn.SORTBY(", formula)
-        formula = re.sub(r"\bUNIQUE\(", "_xlfn.UNIQUE(", formula)
-        formula = re.sub(r"\bXMATCH\(", "_xlfn.XMATCH(", formula)
-        formula = re.sub(r"\bSORT\(", "_xlfn._xlws.SORT(", formula)
-        formula = re.sub(r"\bXLOOKUP\(", "_xlfn.XLOOKUP(", formula)
-        formula = re.sub(r"\bSEQUENCE\(", "_xlfn.SEQUENCE(", formula)
-        formula = re.sub(r"\bFILTER\(", "_xlfn._xlws.FILTER(", formula)
-        formula = re.sub(r"\bRANDARRAY\(", "_xlfn.RANDARRAY(", formula)
         formula = re.sub(r"\bANCHORARRAY\(", "_xlfn.ANCHORARRAY(", formula)
+        formula = re.sub(r"\bBYCOL\(", "_xlfn.BYCOL(", formula)
+        formula = re.sub(r"\bBYROW\(", "_xlfn.BYROW(", formula)
+        formula = re.sub(r"\bCHOOSECOLS\(", "_xlfn.CHOOSECOLS(", formula)
+        formula = re.sub(r"\bCHOOSEROWS\(", "_xlfn.CHOOSEROWS(", formula)
+        formula = re.sub(r"\bDROP\(", "_xlfn.DROP(", formula)
+        formula = re.sub(r"\bEXPAND\(", "_xlfn.EXPAND(", formula)
+        formula = re.sub(r"\bFILTER\(", "_xlfn._xlws.FILTER(", formula)
+        formula = re.sub(r"\bHSTACK\(", "_xlfn.HSTACK(", formula)
+        formula = re.sub(r"\bLAMBDA\(", "_xlfn.LAMBDA(", formula)
+        formula = re.sub(r"\bMAKEARRAY\(", "_xlfn.MAKEARRAY(", formula)
+        formula = re.sub(r"\bMAP\(", "_xlfn.MAP(", formula)
+        formula = re.sub(r"\bRANDARRAY\(", "_xlfn.RANDARRAY(", formula)
+        formula = re.sub(r"\bREDUCE\(", "_xlfn.REDUCE(", formula)
+        formula = re.sub(r"\bSCAN\(", "_xlfn.SCAN(", formula)
+        formula = re.sub(r"\SINGLE\(", "_xlfn.SINGLE(", formula)
+        formula = re.sub(r"\bSEQUENCE\(", "_xlfn.SEQUENCE(", formula)
+        formula = re.sub(r"\bSORT\(", "_xlfn._xlws.SORT(", formula)
+        formula = re.sub(r"\bSORTBY\(", "_xlfn.SORTBY(", formula)
+        formula = re.sub(r"\bSWITCH\(", "_xlfn.SWITCH(", formula)
+        formula = re.sub(r"\bTAKE\(", "_xlfn.TAKE(", formula)
+        formula = re.sub(r"\bTEXTSPLIT\(", "_xlfn.TEXTSPLIT(", formula)
+        formula = re.sub(r"\bTOCOL\(", "_xlfn.TOCOL(", formula)
+        formula = re.sub(r"\bTOROW\(", "_xlfn.TOROW(", formula)
+        formula = re.sub(r"\bUNIQUE\(", "_xlfn.UNIQUE(", formula)
+        formula = re.sub(r"\bVSTACK\(", "_xlfn.VSTACK(", formula)
+        formula = re.sub(r"\bWRAPCOLS\(", "_xlfn.WRAPCOLS(", formula)
+        formula = re.sub(r"\bWRAPROWS\(", "_xlfn.WRAPROWS(", formula)
+        formula = re.sub(r"\bXLOOKUP\(", "_xlfn.XLOOKUP(", formula)
 
         if not self.use_future_functions:
             return formula
 
-        formula = re.sub(r"\bCOT\(", "_xlfn.COT(", formula)
-        formula = re.sub(r"\bCSC\(", "_xlfn.CSC(", formula)
-        formula = re.sub(r"\bIFS\(", "_xlfn.IFS(", formula)
-        formula = re.sub(r"\bPHI\(", "_xlfn.PHI(", formula)
-        formula = re.sub(r"\bRRI\(", "_xlfn.RRI(", formula)
-        formula = re.sub(r"\bSEC\(", "_xlfn.SEC(", formula)
-        formula = re.sub(r"\bXOR\(", "_xlfn.XOR(", formula)
-        formula = re.sub(r"\bACOT\(", "_xlfn.ACOT(", formula)
-        formula = re.sub(r"\bBASE\(", "_xlfn.BASE(", formula)
-        formula = re.sub(r"\bCOTH\(", "_xlfn.COTH(", formula)
-        formula = re.sub(r"\bCSCH\(", "_xlfn.CSCH(", formula)
-        formula = re.sub(r"\bDAYS\(", "_xlfn.DAYS(", formula)
-        formula = re.sub(r"\bIFNA\(", "_xlfn.IFNA(", formula)
-        formula = re.sub(r"\bSECH\(", "_xlfn.SECH(", formula)
         formula = re.sub(r"\bACOTH\(", "_xlfn.ACOTH(", formula)
-        formula = re.sub(r"\bBITOR\(", "_xlfn.BITOR(", formula)
-        formula = re.sub(r"\bF.INV\(", "_xlfn.F.INV(", formula)
-        formula = re.sub(r"\bGAMMA\(", "_xlfn.GAMMA(", formula)
-        formula = re.sub(r"\bGAUSS\(", "_xlfn.GAUSS(", formula)
-        formula = re.sub(r"\bIMCOT\(", "_xlfn.IMCOT(", formula)
-        formula = re.sub(r"\bIMCSC\(", "_xlfn.IMCSC(", formula)
-        formula = re.sub(r"\bIMSEC\(", "_xlfn.IMSEC(", formula)
-        formula = re.sub(r"\bIMTAN\(", "_xlfn.IMTAN(", formula)
-        formula = re.sub(r"\bMUNIT\(", "_xlfn.MUNIT(", formula)
-        formula = re.sub(r"\bSHEET\(", "_xlfn.SHEET(", formula)
-        formula = re.sub(r"\bT.INV\(", "_xlfn.T.INV(", formula)
-        formula = re.sub(r"\bVAR.P\(", "_xlfn.VAR.P(", formula)
-        formula = re.sub(r"\bVAR.S\(", "_xlfn.VAR.S(", formula)
-        formula = re.sub(r"\bARABIC\(", "_xlfn.ARABIC(", formula)
-        formula = re.sub(r"\bBITAND\(", "_xlfn.BITAND(", formula)
-        formula = re.sub(r"\bBITXOR\(", "_xlfn.BITXOR(", formula)
-        formula = re.sub(r"\bCONCAT\(", "_xlfn.CONCAT(", formula)
-        formula = re.sub(r"\bF.DIST\(", "_xlfn.F.DIST(", formula)
-        formula = re.sub(r"\bF.TEST\(", "_xlfn.F.TEST(", formula)
-        formula = re.sub(r"\bIMCOSH\(", "_xlfn.IMCOSH(", formula)
-        formula = re.sub(r"\bIMCSCH\(", "_xlfn.IMCSCH(", formula)
-        formula = re.sub(r"\bIMSECH\(", "_xlfn.IMSECH(", formula)
-        formula = re.sub(r"\bIMSINH\(", "_xlfn.IMSINH(", formula)
-        formula = re.sub(r"\bMAXIFS\(", "_xlfn.MAXIFS(", formula)
-        formula = re.sub(r"\bMINIFS\(", "_xlfn.MINIFS(", formula)
-        formula = re.sub(r"\bSHEETS\(", "_xlfn.SHEETS(", formula)
-        formula = re.sub(r"\bSKEW.P\(", "_xlfn.SKEW.P(", formula)
-        formula = re.sub(r"\bSWITCH\(", "_xlfn.SWITCH(", formula)
-        formula = re.sub(r"\bT.DIST\(", "_xlfn.T.DIST(", formula)
-        formula = re.sub(r"\bT.TEST\(", "_xlfn.T.TEST(", formula)
-        formula = re.sub(r"\bZ.TEST\(", "_xlfn.Z.TEST(", formula)
-        formula = re.sub(r"\bCOMBINA\(", "_xlfn.COMBINA(", formula)
-        formula = re.sub(r"\bDECIMAL\(", "_xlfn.DECIMAL(", formula)
-        formula = re.sub(r"\bRANK.EQ\(", "_xlfn.RANK.EQ(", formula)
-        formula = re.sub(r"\bSTDEV.P\(", "_xlfn.STDEV.P(", formula)
-        formula = re.sub(r"\bSTDEV.S\(", "_xlfn.STDEV.S(", formula)
-        formula = re.sub(r"\bUNICHAR\(", "_xlfn.UNICHAR(", formula)
-        formula = re.sub(r"\bUNICODE\(", "_xlfn.UNICODE(", formula)
-        formula = re.sub(r"\bBETA.INV\(", "_xlfn.BETA.INV(", formula)
-        formula = re.sub(r"\bF.INV.RT\(", "_xlfn.F.INV.RT(", formula)
-        formula = re.sub(r"\bNORM.INV\(", "_xlfn.NORM.INV(", formula)
-        formula = re.sub(r"\bRANK.AVG\(", "_xlfn.RANK.AVG(", formula)
-        formula = re.sub(r"\bT.INV.2T\(", "_xlfn.T.INV.2T(", formula)
-        formula = re.sub(r"\bTEXTJOIN\(", "_xlfn.TEXTJOIN(", formula)
+        formula = re.sub(r"\bACOT\(", "_xlfn.ACOT(", formula)
         formula = re.sub(r"\bAGGREGATE\(", "_xlfn.AGGREGATE(", formula)
+        formula = re.sub(r"\bARABIC\(", "_xlfn.ARABIC(", formula)
+        formula = re.sub(r"\bARRAYTOTEXT\(", "_xlfn.ARRAYTOTEXT(", formula)
+        formula = re.sub(r"\bBASE\(", "_xlfn.BASE(", formula)
         formula = re.sub(r"\bBETA.DIST\(", "_xlfn.BETA.DIST(", formula)
-        formula = re.sub(r"\bBINOM.INV\(", "_xlfn.BINOM.INV(", formula)
-        formula = re.sub(r"\bBITLSHIFT\(", "_xlfn.BITLSHIFT(", formula)
-        formula = re.sub(r"\bBITRSHIFT\(", "_xlfn.BITRSHIFT(", formula)
-        formula = re.sub(r"\bCHISQ.INV\(", "_xlfn.CHISQ.INV(", formula)
-        formula = re.sub(r"\bF.DIST.RT\(", "_xlfn.F.DIST.RT(", formula)
-        formula = re.sub(r"\bFILTERXML\(", "_xlfn.FILTERXML(", formula)
-        formula = re.sub(r"\bGAMMA.INV\(", "_xlfn.GAMMA.INV(", formula)
-        formula = re.sub(r"\bISFORMULA\(", "_xlfn.ISFORMULA(", formula)
-        formula = re.sub(r"\bMODE.MULT\(", "_xlfn.MODE.MULT(", formula)
-        formula = re.sub(r"\bMODE.SNGL\(", "_xlfn.MODE.SNGL(", formula)
-        formula = re.sub(r"\bNORM.DIST\(", "_xlfn.NORM.DIST(", formula)
-        formula = re.sub(r"\bPDURATION\(", "_xlfn.PDURATION(", formula)
-        formula = re.sub(r"\bT.DIST.2T\(", "_xlfn.T.DIST.2T(", formula)
-        formula = re.sub(r"\bT.DIST.RT\(", "_xlfn.T.DIST.RT(", formula)
+        formula = re.sub(r"\bBETA.INV\(", "_xlfn.BETA.INV(", formula)
+        formula = re.sub(r"\bBINOM.DIST.RANGE\(", "_xlfn.BINOM.DIST.RANGE(", formula)
         formula = re.sub(r"\bBINOM.DIST\(", "_xlfn.BINOM.DIST(", formula)
-        formula = re.sub(r"\bCHISQ.DIST\(", "_xlfn.CHISQ.DIST(", formula)
-        formula = re.sub(r"\bCHISQ.TEST\(", "_xlfn.CHISQ.TEST(", formula)
-        formula = re.sub(r"\bEXPON.DIST\(", "_xlfn.EXPON.DIST(", formula)
-        formula = re.sub(r"\bFLOOR.MATH\(", "_xlfn.FLOOR.MATH(", formula)
-        formula = re.sub(r"\bGAMMA.DIST\(", "_xlfn.GAMMA.DIST(", formula)
-        formula = re.sub(r"\bISOWEEKNUM\(", "_xlfn.ISOWEEKNUM(", formula)
-        formula = re.sub(r"\bNORM.S.INV\(", "_xlfn.NORM.S.INV(", formula)
-        formula = re.sub(r"\bWEBSERVICE\(", "_xlfn.WEBSERVICE(", formula)
-        formula = re.sub(r"\bERF.PRECISE\(", "_xlfn.ERF.PRECISE(", formula)
-        formula = re.sub(r"\bFORMULATEXT\(", "_xlfn.FORMULATEXT(", formula)
-        formula = re.sub(r"\bLOGNORM.INV\(", "_xlfn.LOGNORM.INV(", formula)
-        formula = re.sub(r"\bNORM.S.DIST\(", "_xlfn.NORM.S.DIST(", formula)
-        formula = re.sub(r"\bNUMBERVALUE\(", "_xlfn.NUMBERVALUE(", formula)
-        formula = re.sub(r"\bQUERYSTRING\(", "_xlfn.QUERYSTRING(", formula)
+        formula = re.sub(r"\bBINOM.INV\(", "_xlfn.BINOM.INV(", formula)
+        formula = re.sub(r"\bBITAND\(", "_xlfn.BITAND(", formula)
+        formula = re.sub(r"\bBITLSHIFT\(", "_xlfn.BITLSHIFT(", formula)
+        formula = re.sub(r"\bBITOR\(", "_xlfn.BITOR(", formula)
+        formula = re.sub(r"\bBITRSHIFT\(", "_xlfn.BITRSHIFT(", formula)
+        formula = re.sub(r"\bBITXOR\(", "_xlfn.BITXOR(", formula)
         formula = re.sub(r"\bCEILING.MATH\(", "_xlfn.CEILING.MATH(", formula)
+        formula = re.sub(r"\bCEILING.PRECISE\(", "_xlfn.CEILING.PRECISE(", formula)
+        formula = re.sub(r"\bCHISQ.DIST.RT\(", "_xlfn.CHISQ.DIST.RT(", formula)
+        formula = re.sub(r"\bCHISQ.DIST\(", "_xlfn.CHISQ.DIST(", formula)
         formula = re.sub(r"\bCHISQ.INV.RT\(", "_xlfn.CHISQ.INV.RT(", formula)
+        formula = re.sub(r"\bCHISQ.INV\(", "_xlfn.CHISQ.INV(", formula)
+        formula = re.sub(r"\bCHISQ.TEST\(", "_xlfn.CHISQ.TEST(", formula)
+        formula = re.sub(r"\bCOMBINA\(", "_xlfn.COMBINA(", formula)
+        formula = re.sub(r"\bCONCAT\(", "_xlfn.CONCAT(", formula)
+        formula = re.sub(r"\bCONFIDENCE.NORM\(", "_xlfn.CONFIDENCE.NORM(", formula)
         formula = re.sub(r"\bCONFIDENCE.T\(", "_xlfn.CONFIDENCE.T(", formula)
+        formula = re.sub(r"\bCOTH\(", "_xlfn.COTH(", formula)
+        formula = re.sub(r"\bCOT\(", "_xlfn.COT(", formula)
         formula = re.sub(r"\bCOVARIANCE.P\(", "_xlfn.COVARIANCE.P(", formula)
         formula = re.sub(r"\bCOVARIANCE.S\(", "_xlfn.COVARIANCE.S(", formula)
+        formula = re.sub(r"\bCSCH\(", "_xlfn.CSCH(", formula)
+        formula = re.sub(r"\bCSC\(", "_xlfn.CSC(", formula)
+        formula = re.sub(r"\bDAYS\(", "_xlfn.DAYS(", formula)
+        formula = re.sub(r"\bDECIMAL\(", "_xlfn.DECIMAL(", formula)
+        formula = re.sub(r"\bERF.PRECISE\(", "_xlfn.ERF.PRECISE(", formula)
         formula = re.sub(r"\bERFC.PRECISE\(", "_xlfn.ERFC.PRECISE(", formula)
-        formula = re.sub(r"\bFORECAST.ETS\(", "_xlfn.FORECAST.ETS(", formula)
-        formula = re.sub(r"\bHYPGEOM.DIST\(", "_xlfn.HYPGEOM.DIST(", formula)
-        formula = re.sub(r"\bLOGNORM.DIST\(", "_xlfn.LOGNORM.DIST(", formula)
-        formula = re.sub(r"\bPERMUTATIONA\(", "_xlfn.PERMUTATIONA(", formula)
-        formula = re.sub(r"\bPOISSON.DIST\(", "_xlfn.POISSON.DIST(", formula)
-        formula = re.sub(r"\bQUARTILE.EXC\(", "_xlfn.QUARTILE.EXC(", formula)
-        formula = re.sub(r"\bQUARTILE.INC\(", "_xlfn.QUARTILE.INC(", formula)
-        formula = re.sub(r"\bWEIBULL.DIST\(", "_xlfn.WEIBULL.DIST(", formula)
-        formula = re.sub(r"\bCHISQ.DIST.RT\(", "_xlfn.CHISQ.DIST.RT(", formula)
+        formula = re.sub(r"\bEXPON.DIST\(", "_xlfn.EXPON.DIST(", formula)
+        formula = re.sub(r"\bF.DIST.RT\(", "_xlfn.F.DIST.RT(", formula)
+        formula = re.sub(r"\bF.DIST\(", "_xlfn.F.DIST(", formula)
+        formula = re.sub(r"\bF.INV.RT\(", "_xlfn.F.INV.RT(", formula)
+        formula = re.sub(r"\bF.INV\(", "_xlfn.F.INV(", formula)
+        formula = re.sub(r"\bF.TEST\(", "_xlfn.F.TEST(", formula)
+        formula = re.sub(r"\bFILTERXML\(", "_xlfn.FILTERXML(", formula)
+        formula = re.sub(r"\bFLOOR.MATH\(", "_xlfn.FLOOR.MATH(", formula)
         formula = re.sub(r"\bFLOOR.PRECISE\(", "_xlfn.FLOOR.PRECISE(", formula)
-        formula = re.sub(r"\bNEGBINOM.DIST\(", "_xlfn.NEGBINOM.DIST(", formula)
-
-        formula = re.sub(r"\bPERCENTILE.EXC\(", "_xlfn.PERCENTILE.EXC(", formula)
-        formula = re.sub(r"\bPERCENTILE.INC\(", "_xlfn.PERCENTILE.INC(", formula)
-        formula = re.sub(r"\bCEILING.PRECISE\(", "_xlfn.CEILING.PRECISE(", formula)
-        formula = re.sub(r"\bCONFIDENCE.NORM\(", "_xlfn.CONFIDENCE.NORM(", formula)
-        formula = re.sub(r"\bFORECAST.LINEAR\(", "_xlfn.FORECAST.LINEAR(", formula)
-        formula = re.sub(r"\bGAMMALN.PRECISE\(", "_xlfn.GAMMALN.PRECISE(", formula)
-        formula = re.sub(r"\bPERCENTRANK.EXC\(", "_xlfn.PERCENTRANK.EXC(", formula)
-        formula = re.sub(r"\bPERCENTRANK.INC\(", "_xlfn.PERCENTRANK.INC(", formula)
-        formula = re.sub(r"\bBINOM.DIST.RANGE\(", "_xlfn.BINOM.DIST.RANGE(", formula)
-        formula = re.sub(r"\bFORECAST.ETS.STAT\(", "_xlfn.FORECAST.ETS.STAT(", formula)
         formula = re.sub(
             r"\bFORECAST.ETS.CONFINT\(", "_xlfn.FORECAST.ETS.CONFINT(", formula
         )
         formula = re.sub(
             r"\bFORECAST.ETS.SEASONALITY\(", "_xlfn.FORECAST.ETS.SEASONALITY(", formula
         )
+        formula = re.sub(r"\bFORECAST.ETS.STAT\(", "_xlfn.FORECAST.ETS.STAT(", formula)
+        formula = re.sub(r"\bFORECAST.ETS\(", "_xlfn.FORECAST.ETS(", formula)
+        formula = re.sub(r"\bFORECAST.LINEAR\(", "_xlfn.FORECAST.LINEAR(", formula)
+        formula = re.sub(r"\bFORMULATEXT\(", "_xlfn.FORMULATEXT(", formula)
+        formula = re.sub(r"\bGAMMA.DIST\(", "_xlfn.GAMMA.DIST(", formula)
+        formula = re.sub(r"\bGAMMA.INV\(", "_xlfn.GAMMA.INV(", formula)
+        formula = re.sub(r"\bGAMMALN.PRECISE\(", "_xlfn.GAMMALN.PRECISE(", formula)
+        formula = re.sub(r"\bGAMMA\(", "_xlfn.GAMMA(", formula)
+        formula = re.sub(r"\bGAUSS\(", "_xlfn.GAUSS(", formula)
+        formula = re.sub(r"\bHYPGEOM.DIST\(", "_xlfn.HYPGEOM.DIST(", formula)
+        formula = re.sub(r"\bIFNA\(", "_xlfn.IFNA(", formula)
+        formula = re.sub(r"\bIFS\(", "_xlfn.IFS(", formula)
+        formula = re.sub(r"\bIMAGE\(", "_xlfn.IMAGE(", formula)
+        formula = re.sub(r"\bIMCOSH\(", "_xlfn.IMCOSH(", formula)
+        formula = re.sub(r"\bIMCOT\(", "_xlfn.IMCOT(", formula)
+        formula = re.sub(r"\bIMCSCH\(", "_xlfn.IMCSCH(", formula)
+        formula = re.sub(r"\bIMCSC\(", "_xlfn.IMCSC(", formula)
+        formula = re.sub(r"\bIMSECH\(", "_xlfn.IMSECH(", formula)
+        formula = re.sub(r"\bIMSEC\(", "_xlfn.IMSEC(", formula)
+        formula = re.sub(r"\bIMSINH\(", "_xlfn.IMSINH(", formula)
+        formula = re.sub(r"\bIMTAN\(", "_xlfn.IMTAN(", formula)
+        formula = re.sub(r"\bISFORMULA\(", "_xlfn.ISFORMULA(", formula)
+        formula = re.sub(r"\bISOMITTED\(", "_xlfn.ISOMITTED(", formula)
+        formula = re.sub(r"\bISOWEEKNUM\(", "_xlfn.ISOWEEKNUM(", formula)
+        formula = re.sub(r"\bLET\(", "_xlfn.LET(", formula)
+        formula = re.sub(r"\bLOGNORM.DIST\(", "_xlfn.LOGNORM.DIST(", formula)
+        formula = re.sub(r"\bLOGNORM.INV\(", "_xlfn.LOGNORM.INV(", formula)
+        formula = re.sub(r"\bMAXIFS\(", "_xlfn.MAXIFS(", formula)
+        formula = re.sub(r"\bMINIFS\(", "_xlfn.MINIFS(", formula)
+        formula = re.sub(r"\bMODE.MULT\(", "_xlfn.MODE.MULT(", formula)
+        formula = re.sub(r"\bMODE.SNGL\(", "_xlfn.MODE.SNGL(", formula)
+        formula = re.sub(r"\bMUNIT\(", "_xlfn.MUNIT(", formula)
+        formula = re.sub(r"\bNEGBINOM.DIST\(", "_xlfn.NEGBINOM.DIST(", formula)
+        formula = re.sub(r"\bNORM.DIST\(", "_xlfn.NORM.DIST(", formula)
+        formula = re.sub(r"\bNORM.INV\(", "_xlfn.NORM.INV(", formula)
+        formula = re.sub(r"\bNORM.S.DIST\(", "_xlfn.NORM.S.DIST(", formula)
+        formula = re.sub(r"\bNORM.S.INV\(", "_xlfn.NORM.S.INV(", formula)
+        formula = re.sub(r"\bNUMBERVALUE\(", "_xlfn.NUMBERVALUE(", formula)
+        formula = re.sub(r"\bPDURATION\(", "_xlfn.PDURATION(", formula)
+        formula = re.sub(r"\bPERCENTILE.EXC\(", "_xlfn.PERCENTILE.EXC(", formula)
+        formula = re.sub(r"\bPERCENTILE.INC\(", "_xlfn.PERCENTILE.INC(", formula)
+        formula = re.sub(r"\bPERCENTRANK.EXC\(", "_xlfn.PERCENTRANK.EXC(", formula)
+        formula = re.sub(r"\bPERCENTRANK.INC\(", "_xlfn.PERCENTRANK.INC(", formula)
+        formula = re.sub(r"\bPERMUTATIONA\(", "_xlfn.PERMUTATIONA(", formula)
+        formula = re.sub(r"\bPHI\(", "_xlfn.PHI(", formula)
+        formula = re.sub(r"\bPOISSON.DIST\(", "_xlfn.POISSON.DIST(", formula)
+        formula = re.sub(r"\bQUARTILE.EXC\(", "_xlfn.QUARTILE.EXC(", formula)
+        formula = re.sub(r"\bQUARTILE.INC\(", "_xlfn.QUARTILE.INC(", formula)
+        formula = re.sub(r"\bQUERYSTRING\(", "_xlfn.QUERYSTRING(", formula)
+        formula = re.sub(r"\bRANK.AVG\(", "_xlfn.RANK.AVG(", formula)
+        formula = re.sub(r"\bRANK.EQ\(", "_xlfn.RANK.EQ(", formula)
+        formula = re.sub(r"\bRRI\(", "_xlfn.RRI(", formula)
+        formula = re.sub(r"\bSECH\(", "_xlfn.SECH(", formula)
+        formula = re.sub(r"\bSEC\(", "_xlfn.SEC(", formula)
+        formula = re.sub(r"\bSHEETS\(", "_xlfn.SHEETS(", formula)
+        formula = re.sub(r"\bSHEET\(", "_xlfn.SHEET(", formula)
+        formula = re.sub(r"\bSKEW.P\(", "_xlfn.SKEW.P(", formula)
+        formula = re.sub(r"\bSTDEV.P\(", "_xlfn.STDEV.P(", formula)
+        formula = re.sub(r"\bSTDEV.S\(", "_xlfn.STDEV.S(", formula)
+        formula = re.sub(r"\bT.DIST.2T\(", "_xlfn.T.DIST.2T(", formula)
+        formula = re.sub(r"\bT.DIST.RT\(", "_xlfn.T.DIST.RT(", formula)
+        formula = re.sub(r"\bT.DIST\(", "_xlfn.T.DIST(", formula)
+        formula = re.sub(r"\bT.INV.2T\(", "_xlfn.T.INV.2T(", formula)
+        formula = re.sub(r"\bT.INV\(", "_xlfn.T.INV(", formula)
+        formula = re.sub(r"\bT.TEST\(", "_xlfn.T.TEST(", formula)
+        formula = re.sub(r"\bTEXTAFTER\(", "_xlfn.TEXTAFTER(", formula)
+        formula = re.sub(r"\bTEXTBEFORE\(", "_xlfn.TEXTBEFORE(", formula)
+        formula = re.sub(r"\bTEXTJOIN\(", "_xlfn.TEXTJOIN(", formula)
+        formula = re.sub(r"\bUNICHAR\(", "_xlfn.UNICHAR(", formula)
+        formula = re.sub(r"\bUNICODE\(", "_xlfn.UNICODE(", formula)
+        formula = re.sub(r"\bVALUETOTEXT\(", "_xlfn.VALUETOTEXT(", formula)
+        formula = re.sub(r"\bVAR.P\(", "_xlfn.VAR.P(", formula)
+        formula = re.sub(r"\bVAR.S\(", "_xlfn.VAR.S(", formula)
+        formula = re.sub(r"\bWEBSERVICE\(", "_xlfn.WEBSERVICE(", formula)
+        formula = re.sub(r"\bWEIBULL.DIST\(", "_xlfn.WEIBULL.DIST(", formula)
+        formula = re.sub(r"\bXMATCH\(", "_xlfn.XMATCH(", formula)
+        formula = re.sub(r"\bXOR\(", "_xlfn.XOR(", formula)
+        formula = re.sub(r"\bZ.TEST\(", "_xlfn.Z.TEST(", formula)
 
         return formula
 
@@ -1779,9 +1822,6 @@ class Worksheet(xmlwriter.XMLwriter):
         # A hidden worksheet shouldn't be active or selected.
         self.selected = 0
 
-        # TODO. Should add a check to see if the sheet is the global
-        # activesheet or firstsheet and reset them.
-
     def set_first_sheet(self):
         """
         Set current worksheet as the first visible sheet. This is necessary
@@ -1999,13 +2039,12 @@ class Worksheet(xmlwriter.XMLwriter):
 
                     # If the cell is in an autofilter header we add an
                     # additional 16 pixels for the dropdown arrow.
-                    if self.filter_cells.get((row_num, col_num)):
-                        if length > 0:
-                            length += 16
+                    if self.filter_cells.get((row_num, col_num)) and length > 0:
+                        length += 16
 
                     # Add the string length to the lookup table.
-                    max = col_width_max.get(col_num, 0)
-                    if length > max:
+                    width_max = col_width_max.get(col_num, 0)
+                    if length > width_max:
                         col_width_max[col_num] = length
 
         # Apply the width to the column.
@@ -2530,17 +2569,18 @@ class Worksheet(xmlwriter.XMLwriter):
             options["error_type"] = error_types[options["error_type"]]
 
         # Convert date/times value if required.
-        if options["validate"] in ("date", "time"):
-            if options["value"]:
-                if supported_datetime(options["value"]):
-                    date_time = self._convert_date_time(options["value"])
-                    # Format date number to the same precision as Excel.
-                    options["value"] = "%.16g" % date_time
+        if (
+            options["validate"] in ("date", "time")
+            and options["value"]
+            and supported_datetime(options["value"])
+        ):
+            date_time = self._convert_date_time(options["value"])
+            # Format date number to the same precision as Excel.
+            options["value"] = "%.16g" % date_time
 
-            if options["maximum"]:
-                if supported_datetime(options["maximum"]):
-                    date_time = self._convert_date_time(options["maximum"])
-                    options["maximum"] = "%.16g" % date_time
+            if options["maximum"] and supported_datetime(options["maximum"]):
+                date_time = self._convert_date_time(options["maximum"])
+                options["maximum"] = "%.16g" % date_time
 
         # Check that the input title doesn't exceed the maximum length.
         if options.get("input_title") and len(options["input_title"]) > 32:
@@ -2773,7 +2813,7 @@ class Worksheet(xmlwriter.XMLwriter):
 
             if "value" in options:
                 if not supported_datetime(options["value"]):
-                    warn("Conditional format 'value' must be a " "datetime object.")
+                    warn("Conditional format 'value' must be a datetime object.")
                     return -2
                 else:
                     date_time = self._convert_date_time(options["value"])
@@ -2782,7 +2822,7 @@ class Worksheet(xmlwriter.XMLwriter):
 
             if "minimum" in options:
                 if not supported_datetime(options["minimum"]):
-                    warn("Conditional format 'minimum' must be a " "datetime object.")
+                    warn("Conditional format 'minimum' must be a datetime object.")
                     return -2
                 else:
                     date_time = self._convert_date_time(options["minimum"])
@@ -2790,7 +2830,7 @@ class Worksheet(xmlwriter.XMLwriter):
 
             if "maximum" in options:
                 if not supported_datetime(options["maximum"]):
-                    warn("Conditional format 'maximum' must be a " "datetime object.")
+                    warn("Conditional format 'maximum' must be a datetime object.")
                     return -2
                 else:
                     date_time = self._convert_date_time(options["maximum"])
@@ -3246,7 +3286,7 @@ class Worksheet(xmlwriter.XMLwriter):
                 return -2
 
             # Warn if the name looks like a cell name.
-            if re.match(r"^[a-zA-Z][a-zA-Z]?[a-dA-D]?[0-9]+$", name):
+            if re.match(r"^[a-zA-Z][a-zA-Z]?[a-dA-D]?\d+$", name):
                 warn("Name looks like a cell name in add_table(): '%s'" % name)
                 return -2
 
@@ -3960,7 +4000,22 @@ class Worksheet(xmlwriter.XMLwriter):
         self.orientation = 1
         self.page_setup_changed = True
 
-    def set_page_view(self):
+    def set_page_view(self, view=1):
+        """
+        Set the page view mode.
+
+        Args:
+            0: Normal view mode
+            1: Page view mode (the default)
+            2: Page break view mode
+
+        Returns:
+            Nothing.
+
+        """
+        self.page_view = view
+
+    def set_pagebreak_view(self, view=1):
         """
         Set the page view mode.
 
@@ -3971,7 +4026,7 @@ class Worksheet(xmlwriter.XMLwriter):
             Nothing.
 
         """
-        self.page_view = 1
+        self.page_view = 2
 
     def set_paper(self, paper_size):
         """
@@ -4052,9 +4107,7 @@ class Worksheet(xmlwriter.XMLwriter):
         header = header.replace("&[Picture]", "&G")
 
         if len(header) > 255:
-            warn(
-                "Header string cannot be longer than Excel's " "limit of 255 characters"
-            )
+            warn("Header string cannot be longer than Excel's limit of 255 characters")
             return
 
         if options is not None:
@@ -4131,9 +4184,7 @@ class Worksheet(xmlwriter.XMLwriter):
         footer = footer.replace("&[Picture]", "&G")
 
         if len(footer) > 255:
-            warn(
-                "Footer string cannot be longer than Excel's " "limit of 255 characters"
-            )
+            warn("Footer string cannot be longer than Excel's limit of 255 characters")
             return
 
         if options is not None:
@@ -6148,8 +6199,10 @@ class Worksheet(xmlwriter.XMLwriter):
             attributes.append(("showOutlineSymbols", 0))
 
         # Set the page view/layout mode if required.
-        if self.page_view:
+        if self.page_view == 1:
             attributes.append(("view", "pageLayout"))
+        elif self.page_view == 2:
+            attributes.append(("view", "pageBreakPreview"))
 
         # Set the first visible cell.
         if self.top_left_cell != "":
@@ -6157,10 +6210,14 @@ class Worksheet(xmlwriter.XMLwriter):
 
         # Set the zoom level.
         if self.zoom != 100:
-            if not self.page_view:
-                attributes.append(("zoomScale", self.zoom))
-                if self.zoom_scale_normal:
-                    attributes.append(("zoomScaleNormal", self.zoom))
+            attributes.append(("zoomScale", self.zoom))
+
+            if self.page_view == 0 and self.zoom_scale_normal:
+                attributes.append(("zoomScaleNormal", self.zoom))
+            if self.page_view == 1:
+                attributes.append(("zoomScalePageLayoutView", self.zoom))
+            if self.page_view == 2:
+                attributes.append(("zoomScaleSheetLayoutView", self.zoom))
 
         attributes.append(("workbookViewId", 0))
 
@@ -7165,7 +7222,7 @@ class Worksheet(xmlwriter.XMLwriter):
             warn("Unknown operator = %s" % operator)
 
         # The 'equal' operator is the default attribute and isn't stored.
-        if not operator == "equal":
+        if operator != "equal":
             attributes.append(("operator", operator))
         attributes.append(("val", val))
 
@@ -8280,47 +8337,47 @@ class Worksheet(xmlwriter.XMLwriter):
         self._xml_start_tag("ignoredErrors")
 
         if self.ignored_errors.get("number_stored_as_text"):
-            range = self.ignored_errors["number_stored_as_text"]
-            self._write_ignored_error("numberStoredAsText", range)
+            ignored_range = self.ignored_errors["number_stored_as_text"]
+            self._write_ignored_error("numberStoredAsText", ignored_range)
 
         if self.ignored_errors.get("eval_error"):
-            range = self.ignored_errors["eval_error"]
-            self._write_ignored_error("evalError", range)
+            ignored_range = self.ignored_errors["eval_error"]
+            self._write_ignored_error("evalError", ignored_range)
 
         if self.ignored_errors.get("formula_differs"):
-            range = self.ignored_errors["formula_differs"]
-            self._write_ignored_error("formula", range)
+            ignored_range = self.ignored_errors["formula_differs"]
+            self._write_ignored_error("formula", ignored_range)
 
-        if self.ignored_errors.get("formula_range"):
-            range = self.ignored_errors["formula_range"]
-            self._write_ignored_error("formulaRange", range)
+        if self.ignored_errors.get("formula_ignored_range"):
+            ignored_range = self.ignored_errors["formula_ignored_range"]
+            self._write_ignored_error("formulaIgnored_range", ignored_range)
 
         if self.ignored_errors.get("formula_unlocked"):
-            range = self.ignored_errors["formula_unlocked"]
-            self._write_ignored_error("unlockedFormula", range)
+            ignored_range = self.ignored_errors["formula_unlocked"]
+            self._write_ignored_error("unlockedFormula", ignored_range)
 
         if self.ignored_errors.get("empty_cell_reference"):
-            range = self.ignored_errors["empty_cell_reference"]
-            self._write_ignored_error("emptyCellReference", range)
+            ignored_range = self.ignored_errors["empty_cell_reference"]
+            self._write_ignored_error("emptyCellReference", ignored_range)
 
         if self.ignored_errors.get("list_data_validation"):
-            range = self.ignored_errors["list_data_validation"]
-            self._write_ignored_error("listDataValidation", range)
+            ignored_range = self.ignored_errors["list_data_validation"]
+            self._write_ignored_error("listDataValidation", ignored_range)
 
         if self.ignored_errors.get("calculated_column"):
-            range = self.ignored_errors["calculated_column"]
-            self._write_ignored_error("calculatedColumn", range)
+            ignored_range = self.ignored_errors["calculated_column"]
+            self._write_ignored_error("calculatedColumn", ignored_range)
 
         if self.ignored_errors.get("two_digit_text_year"):
-            range = self.ignored_errors["two_digit_text_year"]
-            self._write_ignored_error("twoDigitTextYear", range)
+            ignored_range = self.ignored_errors["two_digit_text_year"]
+            self._write_ignored_error("twoDigitTextYear", ignored_range)
 
         self._xml_end_tag("ignoredErrors")
 
-    def _write_ignored_error(self, type, range):
+    def _write_ignored_error(self, type, ignored_range):
         # Write the <ignoredError> element.
         attributes = [
-            ("sqref", range),
+            ("sqref", ignored_range),
             (type, 1),
         ]
 

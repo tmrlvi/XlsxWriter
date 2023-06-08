@@ -12,7 +12,7 @@ import operator
 import os
 import re
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from fractions import Fraction
 from struct import unpack
@@ -121,7 +121,7 @@ class Workbook(xmlwriter.XMLwriter):
         self.custom_colors = []
         self.doc_properties = {}
         self.custom_properties = []
-        self.createtime = datetime.utcnow()
+        self.createtime = datetime.now(timezone.utc)
         self.num_vml_files = 0
         self.num_comment_files = 0
         self.x_window = 240
@@ -490,7 +490,7 @@ class Workbook(xmlwriter.XMLwriter):
             formula = formula.lstrip("=")
 
         # Local defined names are formatted like "Sheet1!name".
-        sheet_parts = re.compile(r"^(.*)!(.*)$")
+        sheet_parts = re.compile(r"^([^!]+)!([^!]+)$")
         match = sheet_parts.match(name)
 
         if match:
@@ -514,7 +514,7 @@ class Workbook(xmlwriter.XMLwriter):
             return -1
 
         # Warn if the defined name looks like a cell name.
-        if re.match(r"^[a-zA-Z][a-zA-Z]?[a-dA-D]?[0-9]+$", name):
+        if re.match(r"^[a-zA-Z][a-zA-Z]?[a-dA-D]?\d+$", name):
             warn("Name looks like a cell name in defined_name(): '%s'" % name)
             return -1
 
@@ -939,7 +939,6 @@ class Workbook(xmlwriter.XMLwriter):
         unique_num_formats = {}
         num_formats = []
         index = 164
-        num_format_count = 0
 
         for xf_format in self.xf_formats + self.dxf_formats:
             num_format = xf_format.num_format
@@ -975,7 +974,6 @@ class Workbook(xmlwriter.XMLwriter):
                 # Only increase font count for XF formats (not DXF formats).
                 if xf_format.xf_index:
                     num_formats.append(num_format)
-                    num_format_count += 1
 
         self.num_formats = num_formats
 
@@ -1192,11 +1190,11 @@ class Workbook(xmlwriter.XMLwriter):
 
                 (
                     image_type,
-                    width,
-                    height,
-                    name,
-                    x_dpi,
-                    y_dpi,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
                     digest,
                 ) = self._get_image_properties(filename, image_data)
 
@@ -1315,7 +1313,7 @@ class Workbook(xmlwriter.XMLwriter):
                     self.images.append([filename, image_type, image_data])
 
                 sheet._prepare_header_image(
-                    image_ref_id,
+                    ref_id,
                     width,
                     height,
                     name,
@@ -1743,8 +1741,6 @@ class Workbook(xmlwriter.XMLwriter):
 
                 # Get the data from the worksheet table.
                 data = worksheet._get_range_data(*cells)
-
-                # TODO. Handle SST string ids if required.
 
                 # Add the data to the chart.
                 chart.formula_data[r_id] = data
